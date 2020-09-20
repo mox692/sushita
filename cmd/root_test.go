@@ -27,14 +27,10 @@ import (
 // cmdパッケージのExecuteの終了ステータスコードのテスト
 func TestExecute(t *testing.T) {
 	status := Execute()
+	fmt.Println(status, "status!!")
 	if status != 0 {
 		t.Errorf("expected 0, get %d", status)
 	}
-	fmt.Printf("status code: %d\n", status)
-}
-
-func Output(w io.Writer, output string) {
-	fmt.Fprintln(w, output)
 }
 
 // 期待した標準出力が得られるかのテスト
