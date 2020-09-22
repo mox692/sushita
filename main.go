@@ -15,8 +15,19 @@ limitations under the License.
 */
 package main
 
-import "./cmd"
+import (
+	crand "crypto/rand"
+	"fmt"
+	"math"
+	"math/big"
+	"math/rand"
+
+	"./cmd"
+)
 
 func main() {
+	seed, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
+	rand.Seed(seed.Int64())
+	fmt.Println(rand.Int63())
 	cmd.Execute()
 }

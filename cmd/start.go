@@ -23,7 +23,10 @@ import (
 	"os"
 	"time"
 
+	"../constant"
+
 	"github.com/spf13/cobra"
+	"github.com/spiegel-im-spiegel/gocli/exitcode"
 )
 
 // startCmd represents the start command
@@ -37,7 +40,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		startSushita()
+		status()
 	},
 }
 
@@ -54,13 +57,26 @@ func init() {
 	// is called directly, e.g.:
 	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-func startSushita() {
+
+// この関数を挟むことでstatusコードのテストを行いやすくする。
+func status() (exit exitcode.ExitCode) {
+	exit = exitcode.Normal
+	if err := startSushita(); err != nil {
+		fmt.Println(err)
+		exit = exitcode.Abnormal
+	}
+	return exit
+}
+
+// sushita startのメイン処理。
+func startSushita() error {
 	fmt.Println("↓enter eny command")
 	score := 0
 	timer := time.NewTimer(time.Second * 15)
-	question := []string{"きょうのばんごはん", "かのじょのゆくえ", "あしたのてんき"}
+	// question := []string{"きょうのばんごはん", "かのじょのゆくえ", "あしたのてんき"}
+
 	s := bufio.NewScanner(os.Stdin)
-	now_question := question[rand.Intn(3)]
+	now_question := constant.DefaultWords[len(constant.DefaultWords)-1]
 	fmt.Println(now_question)
 
 	remainTime := 15
@@ -79,7 +95,7 @@ func startSushita() {
 				fmt.Printf("**********************************\n")
 				fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", remainTime, score)
 				fmt.Printf("**********************************\n")
-				now_question = question[rand.Intn(2)]
+				now_question = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))-1]
 				fmt.Println(now_question)
 			} else {
 				fmt.Printf("incollect...\nTime Remain : %d\n\n", remainTime)
@@ -98,6 +114,7 @@ func startSushita() {
 	if s.Err() != nil {
 		// non-EOF error.
 		log.Fatal(s.Err())
+		return s.Err()
 	}
-
+	return nil
 }
