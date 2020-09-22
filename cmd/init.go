@@ -34,7 +34,7 @@ var initCmd = &cobra.Command{
 		fmt.Printf("Enter your name!\n")
 		fmt.Printf("=>")
 
-		fmt.Scanf("%s", userName)
+		fmt.Scanf("%s", &userName)
 
 		fmt.Printf("hello %s!!\n", userName)
 
@@ -43,32 +43,14 @@ var initCmd = &cobra.Command{
 			fmt.Errorf("DbConnection.Exec : %w", err)
 		}
 
-		// DbConnection, err := sql.Open("sqlite3", dbPath)
-		// if err != nil {
-		// 	return fmt.Errorf("err : %w", err)
-		// }
-
-		// defer DbConnection.Close()
-
-		sqlCmd := `CREATE TABLE IF NOT EXISTS user(
-			id TEXT PRIMARY KEY,
-			user_name TEXT)`
-		_, err = db.DbConnection.Exec(sqlCmd)
+		err = db.CreateUsertable(db.DbConnection)
 		if err != nil {
-			return fmt.Errorf("DbConnection.Exec : %w", err)
+			return fmt.Errorf("err : %w", err)
 		}
 
-		sqlCmd = `CREATE TABLE IF NOT EXISTS local_ranking(
-			score INTEGER,
-			created_at TEXT)`
-		_, err = db.DbConnection.Exec(sqlCmd)
+		err = db.CreateRankingtable(db.DbConnection)
 		if err != nil {
-			return fmt.Errorf("DbConnection.Exec : %w", err)
-		}
-
-		if err != nil {
-			cmd.Printf("failed to init dakoku.\n")
-			return err
+			return fmt.Errorf("err : %w", err)
 		}
 
 		cmd.Printf("init sushita!🎉\n")
