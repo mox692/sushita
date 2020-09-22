@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/mox692/sushita/db"
@@ -51,17 +52,28 @@ var initCmd = &cobra.Command{
 			fmt.Errorf("DbConnection.Exec : %w", err)
 		}
 
-		err = db.CreateUsertable(db.DbConnection)
 		if err != nil {
-			return fmt.Errorf("err : %w", err)
+			fmt.Errorf("err : %w", err)
 		}
 
-		err = db.CreateRankingtable(db.DbConnection)
-		if err != nil {
-			return fmt.Errorf("err : %w", err)
-		}
+		err = db.Transaction(func(tx *sql.Tx) error {
 
-		err = db.InsertUserData(userID.String(), userName)
+			err = db.CreateUsertable(db.DbConnection)
+			if err != nil {
+				return fmt.Errorf("err : %w", err)
+			}
+
+			err = db.CreateRankingtable(db.DbConnection, tx)
+			if err != nil {
+				return fmt.Errorf("err : %w", err)
+			}
+
+			err = db.InsertUserData(userID.String(), userName, tx)
+			if err != nil {
+				return fmt.Errorf("err : %w", err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("err : %w", err)
 		}
