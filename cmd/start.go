@@ -23,6 +23,8 @@ import (
 	"os"
 	"time"
 
+	"../constant"
+
 	"github.com/spf13/cobra"
 	"github.com/spiegel-im-spiegel/gocli/exitcode"
 )
@@ -71,9 +73,10 @@ func startSushita() error {
 	fmt.Println("↓enter eny command")
 	score := 0
 	timer := time.NewTimer(time.Second * 15)
-	question := []string{"きょうのばんごはん", "かのじょのゆくえ", "あしたのてんき"}
+	// question := []string{"きょうのばんごはん", "かのじょのゆくえ", "あしたのてんき"}
+
 	s := bufio.NewScanner(os.Stdin)
-	now_question := question[rand.Intn(3)]
+	now_question := constant.DefaultWords[len(constant.DefaultWords)-1]
 	fmt.Println(now_question)
 
 	remainTime := 15
@@ -92,7 +95,7 @@ func startSushita() error {
 				fmt.Printf("**********************************\n")
 				fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", remainTime, score)
 				fmt.Printf("**********************************\n")
-				now_question = question[rand.Intn(2)]
+				now_question = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))-1]
 				fmt.Println(now_question)
 			} else {
 				fmt.Printf("incollect...\nTime Remain : %d\n\n", remainTime)
