@@ -42,7 +42,8 @@ var initCmd = &cobra.Command{
 		fmt.Printf("hello %s!!\n", userName)
 
 		// UUIDでユーザIDを生成する
-		userID, err := uuid.NewRandom()
+		userid, err := uuid.NewRandom()
+		userID := userid.String()
 		if err != nil {
 			return fmt.Errorf("err : %w", err)
 		}
@@ -52,31 +53,38 @@ var initCmd = &cobra.Command{
 			fmt.Errorf("DbConnection.Exec : %w", err)
 		}
 
-		if err != nil {
-			fmt.Errorf("err : %w", err)
-		}
+		// if err != nil {
+		// 	fmt.Errorf("err : %w", err)
+		// }
 
-		err = db.Transaction(func(tx *sql.Tx) error {
-
-			err = db.CreateUsertable(db.DbConnection)
-			if err != nil {
-				return fmt.Errorf("err : %w", err)
-			}
-
-			err = db.CreateRankingtable(db.DbConnection, tx)
-			if err != nil {
-				return fmt.Errorf("err : %w", err)
-			}
-
-			err = db.InsertUserData(userID.String(), userName, tx)
-			if err != nil {
-				return fmt.Errorf("err : %w", err)
-			}
-			return nil
-		})
+		// テストを書きやすいようにSetupDBを定義
+		err = SetupDB(userID, userName, db.DbConnection)
 		if err != nil {
 			return fmt.Errorf("err : %w", err)
 		}
+
+		return err
+		// err = db.Transaction(func(tx *sql.Tx) error {
+
+		// 	err = db.CreateUsertable(db.DbConnection)
+		// 	if err != nil {
+		// 		return fmt.Errorf("err : %w", err)
+		// 	}
+
+		// 	err = db.CreateRankingtable(db.DbConnection, tx)
+		// 	if err != nil {
+		// 		return fmt.Errorf("err : %w", err)
+		// 	}
+
+		// 	err = db.InsertUserData(userID.String(), userName, tx)
+		// 	if err != nil {
+		// 		return fmt.Errorf("err : %w", err)
+		// 	}
+		// 	return nil
+		// })
+		// if err != nil {
+		// 	return fmt.Errorf("err : %w", err)
+		// }
 
 		cmd.Printf("init sushita!🎉\n")
 		return nil
@@ -85,4 +93,30 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+}
+
+func SetupDB(userID, userName string, dbConn *sql.DB) error {
+
+	err := db.Transaction(func(tx *sql.Tx) error {
+
+		err := db.CreateUsertable(tx)
+		if err != nil {
+			return fmt.Errorf("err : %w", err)
+		}
+
+		err = db.CreateRankingtable(tx)
+		if err != nil {
+			return fmt.Errorf("err : %w", err)
+		}
+
+		err = db.InsertUserData(userID, userName, tx)
+		if err != nil {
+			return fmt.Errorf("err : %w", err)
+		}
+		return nil
+	}, dbConn)
+	if err != nil {
+		return fmt.Errorf("err : %w", err)
+	}
+	return nil
 }
