@@ -18,7 +18,9 @@ package cmd
 import (
 	"fmt"
 
-	"../db"
+	"github.com/mox692/sushita/db"
+
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +40,13 @@ var initCmd = &cobra.Command{
 
 		fmt.Printf("hello %s!!\n", userName)
 
-		err := db.DBinit()
+		// UUIDでユーザIDを生成する
+		userID, err := uuid.NewRandom()
+		if err != nil {
+			return fmt.Errorf("err : %w", err)
+		}
+
+		err = db.DBinit()
 		if err != nil {
 			fmt.Errorf("DbConnection.Exec : %w", err)
 		}
@@ -49,6 +57,11 @@ var initCmd = &cobra.Command{
 		}
 
 		err = db.CreateRankingtable(db.DbConnection)
+		if err != nil {
+			return fmt.Errorf("err : %w", err)
+		}
+
+		err = db.InsertUserData(userID.String(), userName)
 		if err != nil {
 			return fmt.Errorf("err : %w", err)
 		}

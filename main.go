@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"math/rand"
 
-	"./cmd"
+	"github.com/mox692/sushita/cmd"
 )
 
 func main() {

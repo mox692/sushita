@@ -26,3 +26,16 @@ func CreateRankingtable(DbConnection *sql.DB) error {
 	}
 	return nil
 }
+
+func InsertUserData(userID, userName string) error {
+	stmt, err := DbConnection.Prepare("INSERT INTO user (id, user_name) values (?, ?);")
+	if err != nil {
+		return fmt.Errorf("db.Conn.Prepare err : %w", err)
+	}
+	_, err = stmt.Exec(userID, userName)
+	if err != nil {
+		return fmt.Errorf("EXEC err : %w", err)
+	}
+
+	return nil
+}

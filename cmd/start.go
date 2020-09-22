@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	"../constant"
+	"github.com/mox692/sushita/constant"
 
 	"github.com/spf13/cobra"
 	"github.com/spiegel-im-spiegel/gocli/exitcode"
