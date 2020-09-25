@@ -6,8 +6,9 @@ import (
 )
 
 /* トランザクション処理 */
-func Transaction(txFunc func(*sql.Tx) error) error {
-	tx, err := DbConnection.Begin()
+func Transaction(txFunc func(*sql.Tx) error, dbConn *sql.DB) error {
+
+	tx, err := dbConn.Begin()
 	if err != nil {
 		log.Println(err, "トランザクションの開始に失敗しました")
 		return err

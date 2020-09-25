@@ -11,7 +11,7 @@ import (
 )
 
 // useridとusernameを適当に与えて、
-// mockのexpect通りの結果が得られるか。
+// SetupDBが正しく動作するか
 func TestSetupDB(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
@@ -34,5 +34,3 @@ func TestSetupDB(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
-
-// rankingtableに実際にinsertができるか。

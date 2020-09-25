@@ -63,7 +63,7 @@ var initCmd = &cobra.Command{
 			return fmt.Errorf("err : %w", err)
 		}
 
-		return err
+		// return err
 		// err = db.Transaction(func(tx *sql.Tx) error {
 
 		// 	err = db.CreateUsertable(db.DbConnection)

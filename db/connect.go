@@ -3,15 +3,20 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"os"
+	"os/user"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var DbConnection *sql.DB
 
 func DBinit() error {
-	workDir, _ := os.Getwd()
-	dbPath := workDir + "/db.sql"
-	var err error
+
+	user, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("err : %w", err)
+	}
+	dbPath := user.HomeDir + "/db.sql"
 	DbConnection, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("err : %w", err)
