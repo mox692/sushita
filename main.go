@@ -22,12 +22,14 @@ import (
 	"math/big"
 	"math/rand"
 
-	"./cmd"
+	"github.com/mitchellh/go-homedir"
+	"github.com/mox692/sushita/cmd"
 )
 
 func main() {
 	seed, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
 	rand.Seed(seed.Int64())
 	fmt.Println(rand.Int63())
+	fmt.Println(homedir.Dir())
 	cmd.Execute()
 }
