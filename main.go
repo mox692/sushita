@@ -17,19 +17,15 @@ package main
 
 import (
 	crand "crypto/rand"
-	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/mox692/sushita/cmd"
 )
 
 func main() {
 	seed, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
 	rand.Seed(seed.Int64())
-	fmt.Println(rand.Int63())
-	fmt.Println(homedir.Dir())
 	cmd.Execute()
 }
