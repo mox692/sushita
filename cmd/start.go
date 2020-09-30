@@ -21,6 +21,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/user"
 	"time"
 
 	"github.com/mox692/sushita/constant"
@@ -33,14 +34,13 @@ import (
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		status()
+	Long:  ``,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		status := status()
+		if status != 0 {
+			return fmt.Errorf("status err: %d", status)
+		}
+		return nil
 	},
 }
 
@@ -56,15 +56,27 @@ func status() (exit exitcode.ExitCode) {
 		fmt.Println(err)
 		exit = exitcode.Abnormal
 	}
+
 	return exit
 }
 
 // sushita startのメイン処理。
 func startSushita() error {
+
+	// homedirにdb.sqlがなければ、
+	user, err := user.Current()
+	if err != nil {
+		return err
+	}
+	dbPath := user.HomeDir + "/db.sql"
+	if f, err := os.Stat(dbPath); os.IsNotExist(err) || f.IsDir() {
+		fmt.Printf("`db.sql` is not found in %s.\n Run `sushita init`.", dbPath)
+		return nil
+	}
+
 	fmt.Println("↓enter eny command")
 	score := 0
 	timer := time.NewTimer(time.Second * 15)
-	// question := []string{"きょうのばんごはん", "かのじょのゆくえ", "あしたのてんき"}
 
 	s := bufio.NewScanner(os.Stdin)
 	now_question := constant.DefaultWords[len(constant.DefaultWords)-1]
