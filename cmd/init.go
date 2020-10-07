@@ -22,11 +22,10 @@ var initCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		var userName string
+
 		fmt.Printf("Enter your name!\n")
 		fmt.Printf("=>")
-
 		fmt.Scanf("%s", &userName)
-
 		fmt.Printf("hello %s!!\n", userName)
 
 		// UUIDでユーザIDを生成する
