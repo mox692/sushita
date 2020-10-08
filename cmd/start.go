@@ -65,13 +65,19 @@ func start() error {
 	fmt.Println(now_question)
 
 	remainTime := 15
+	// [goroutine1]
+	// バックグラウンドでタイマー値の減数を処理する。
+	// Todo: timeパッケージで、もっとマシな便利メソッド的なのはないか？？
 	go func() {
 		ad := &remainTime
 		for range time.Tick(1 * time.Second) {
 			*ad = *ad - 1
 		}
+		<-timer.C
 	}()
 
+	// [goroutine2]
+	// 無限に常に標準入力を待つ
 	go func() {
 		for s.Scan() {
 			if s.Text() == now_question {
@@ -85,8 +91,11 @@ func start() error {
 				fmt.Printf("incollect...\nTime Remain : %d\n\n", remainTime)
 				fmt.Printf("%s\n", now_question)
 			}
+			<-timer.C
+			timer.Stop()
+			break
 		}
-		<-timer.C
+		return
 	}()
 
 	time.Sleep(time.Second * 15)
@@ -101,14 +110,13 @@ func start() error {
 	if err != nil {
 		log.Fatal("err: %w", err)
 	}
-	fmt.Println("high score:", highScoreData)
+	fmt.Println("high score:", highScoreData.Score)
 	if score > highScoreData.Score {
 		err = askToSend(score)
 	}
 	if err != nil {
 		log.Fatal("err: %w", err)
 	}
-
 	if s.Err() != nil {
 		// non-EOF error.
 		log.Fatal(s.Err())
@@ -165,6 +173,7 @@ func sendRankingData(score int) error {
 		return fmt.Errorf(" %w", err)
 	}
 
+	// レスポンスを標準出力
 	fmt.Printf("%#v", res)
 	return nil
 }
