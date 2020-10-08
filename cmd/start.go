@@ -29,15 +29,9 @@ var startCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(startCmd)
-
-}
-
-// この関数を挟むことでstatusコードのテストを行いやすくする。
 func status() (exit exitcode.ExitCode) {
 	exit = exitcode.Normal
-	if err := startSushita(); err != nil {
+	if err := start(); err != nil {
 		fmt.Println(err)
 		exit = exitcode.Abnormal
 	}
@@ -45,21 +39,19 @@ func status() (exit exitcode.ExitCode) {
 	return exit
 }
 
-// sushita startのメイン処理。
-func startSushita() error {
+func start() error {
 
-	// homedirにdb.sqlがなければ、
 	user, err := user.Current()
 	if err != nil {
-		return err
+		return fmt.Errorf(": %w", err)
 	}
+
 	dbPath := user.HomeDir + "/db.sql"
 	if f, err := os.Stat(dbPath); os.IsNotExist(err) || f.IsDir() {
 		fmt.Printf("`db.sql` is not found in %s.\n Run `sushita init`.", dbPath)
 		return nil
 	}
 
-	fmt.Println("↓enter eny command")
 	score := 0
 	timer := time.NewTimer(time.Second * 15)
 

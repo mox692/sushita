@@ -22,11 +22,6 @@ var rankingCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(rankingCmd)
-
-}
-
 func getRanking() error {
 
 	client := new(http.Client)

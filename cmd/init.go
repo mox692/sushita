@@ -50,10 +50,6 @@ var initCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(initCmd)
-}
-
 func SetupDB(userID, userName string, dbConn *sql.DB) error {
 
 	err := db.Transaction(func(tx *sql.Tx) error {

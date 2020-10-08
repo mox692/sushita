@@ -9,5 +9,4 @@ func TestDBinit(t *testing.T) {
 	if err := DBinit(); err != nil {
 		t.Fatalf("err : %s", err)
 	}
-
 }
