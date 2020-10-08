@@ -70,7 +70,6 @@ func start() error {
 		for range time.Tick(1 * time.Second) {
 			*ad = *ad - 1
 		}
-
 	}()
 
 	go func() {
@@ -102,6 +101,7 @@ func start() error {
 	if err != nil {
 		log.Fatal("err: %w", err)
 	}
+	fmt.Println("high score:", highScoreData)
 	if score > highScoreData.Score {
 		err = askToSend(score)
 	}
@@ -132,10 +132,11 @@ func getHighScore() (*db.LocalRanking, error) {
 
 func askToSend(score int) error {
 	// ranking送信の確認テキスト
+	fmt.Printf("\n\n🎉🎉🎉= HIGH SCORE !!! =🎉🎉🎉\n\n")
 	fmt.Println("Do you want to send your highscore to the server? (Y/N)")
 	// yes,noの受け取り
 	var input string
-	_, err := fmt.Scanf("%s", input)
+	_, err := fmt.Scanf("%s", &input)
 	if err != nil {
 		log.Fatal("err: %w", err)
 		return err
