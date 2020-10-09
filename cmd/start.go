@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -41,7 +42,6 @@ func status() (exit exitcode.ExitCode) {
 		fmt.Println(err)
 		exit = exitcode.Abnormal
 	}
-
 	return exit
 }
 
@@ -140,10 +140,10 @@ func getHighScore() (*db.LocalRanking, error) {
 }
 
 func askToSend(score int) error {
-	// ranking送信の確認テキスト
+
 	fmt.Printf("\n\n🎉🎉🎉= HIGH SCORE !!! =🎉🎉🎉\n\n")
 	fmt.Println("Do you want to send your highscore to the server? (Y/N)")
-	// yes,noの受け取り
+
 	var input string
 	_, err := fmt.Scanf("%s", &input)
 	if err != nil {
@@ -170,7 +170,6 @@ func sendRankingData(score int) error {
 	client := new(http.Client)
 	url := "https://sushita.uc.r.appspot.com/ranking/set"
 
-	// jsonリクエストを作成
 	sendData := &sendRankingRequest{
 		Name:  user.UserName,
 		Score: score,
@@ -190,13 +189,14 @@ func sendRankingData(score int) error {
 		return fmt.Errorf(" %w", err)
 	}
 
-	// レスポンスを標準出力
-	fmt.Printf("%#v\n\n", res)
+	// Todo: レスポンスの構造体を決めて、decode処理を実装
+	// fmt.Printf("%#v\n\n", res)
 	// bodyを表示
 	//	***jsonにデコードする時***
 	// json.NewDecoder(res.Body).Decode(res)
-	buf, _ := json.Marshal(res.Body)
-	fmt.Println(string(buf))
+	// buf, _ := json.Marshal(res.Body)
+	b, err := ioutil.ReadAll(res.Body)
+	fmt.Println(string(b))
 	return nil
 }
 
