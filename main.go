@@ -21,8 +21,15 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/mox692/sushita/db"
+
 	"github.com/mox692/sushita/cmd"
 )
+
+func init() {
+	// Todo: err handling
+	db.DBinit()
+}
 
 func main() {
 	seed, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))

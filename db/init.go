@@ -5,6 +5,16 @@ import (
 	"fmt"
 )
 
+type LocalRanking struct {
+	Score     int
+	CreatedAt string
+}
+
+type User struct {
+	Id       string
+	UserName string
+}
+
 func CreateUsertable(tx *sql.Tx) error {
 	sqlCmd := `CREATE TABLE IF NOT EXISTS user(
 		id TEXT PRIMARY KEY,
@@ -33,4 +43,11 @@ func InsertUserData(userID, userName string, tx *sql.Tx) error {
 		return fmt.Errorf("EXEC err : %w", err)
 	}
 	return nil
+}
+
+func SelectUser() (*User, error) {
+	user := User{}
+	row := DbConnection.QueryRow("select * from user limit 1;")
+	err := row.Scan(&user.Id, &user.UserName)
+	return &user, err
 }

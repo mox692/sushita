@@ -22,11 +22,10 @@ var initCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		var userName string
+
 		fmt.Printf("Enter your name!\n")
 		fmt.Printf("=>")
-
 		fmt.Scanf("%s", &userName)
-
 		fmt.Printf("hello %s!!\n", userName)
 
 		// UUIDでユーザIDを生成する
@@ -49,10 +48,6 @@ var initCmd = &cobra.Command{
 		cmd.Printf("init sushita!🎉\n")
 		return nil
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(initCmd)
 }
 
 func SetupDB(userID, userName string, dbConn *sql.DB) error {
