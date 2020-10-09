@@ -11,7 +11,7 @@ type LocalRanking struct {
 }
 
 type User struct {
-	Id       int
+	Id       string
 	UserName string
 }
 

@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/user"
-	"strconv"
 	"time"
 
 	"github.com/mox692/sushita/constant"
@@ -163,17 +164,47 @@ func askToSend(score int) error {
 
 func sendRankingData(score int) error {
 	user, err := db.SelectUser()
+	if err != nil {
+		fmt.Errorf("err: %w", err)
+	}
 	client := new(http.Client)
 	url := "https://sushita.uc.r.appspot.com/ranking/set"
-	req, err := http.NewRequest("Get", url, nil)
-	req.Header.Set("user-token", strconv.Itoa(user.Id))
+
+	// jsonリクエストを作成
+	sendData := &sendRankingRequest{
+		Name:  user.UserName,
+		Score: score,
+	}
+
+	jsonData, err := json.Marshal(sendData)
+	if err != nil {
+		return fmt.Errorf(": %w", err)
+	}
+
+	req, err := http.NewRequest("Get", url, bytes.NewBuffer(jsonData))
+	req.Header.Set("user-token", user.Id)
 	res, err := client.Do(req)
+	defer res.Body.Close()
 
 	if err != nil {
 		return fmt.Errorf(" %w", err)
 	}
 
 	// レスポンスを標準出力
-	fmt.Printf("%#v", res)
+	fmt.Printf("%#v\n\n", res)
+	// bodyを表示
+	//	***jsonにデコードする時***
+	// json.NewDecoder(res.Body).Decode(res)
+	buf, _ := json.Marshal(res.Body)
+	fmt.Println(string(buf))
 	return nil
+}
+
+type sendRankingRequest struct {
+	Name  string `json: "name"`
+	Score int    `json: "score"`
+}
+
+type response struct {
+	Score int32 `json:"score"`
 }
