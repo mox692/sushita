@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"sync"
 	"time"
 
 	"github.com/mox692/sushita/constant"
@@ -66,40 +67,78 @@ func start() error {
 	fmt.Println(now_question)
 
 	remainTime := 15
+
+	/*
+		1).15秒の時間を管理するgoroutine
+		2).問題をひたすら表示させるgoroutine
+
+		・15sのチャネルを常に監視する(switchする)処理を2)に入れる。
+		・time sleepはダサいので、sync.Waitを調べて導入する。
+	*/
+
 	// [goroutine1]
 	// バックグラウンドでタイマー値の減数を処理する。
 	// Todo: timeパッケージで、もっとマシな便利メソッド的なのはないか？？
+
+	wg := sync.WaitGroup{}
+	timeover := make(chan struct{})
+	wg.Add(1)
 	go func() {
 		ad := &remainTime
+
+		// 1s毎にremain Timeを1つずつデクリメント
 		for range time.Tick(1 * time.Second) {
 			*ad = *ad - 1
+			// timer終了
+			if *ad == 0 {
+				timer.Stop()
+				// timer.Cをしっかり読み捨てる
+				timeover <- struct{}{}
+				fmt.Println("timer終了")
+				break
+			}
 		}
-		<-timer.C
+		wg.Done()
+		fmt.Println("wgdone 終わり")
 	}()
 
 	// [goroutine2]
 	// 無限に常に標準入力を待つ
+
+	wg.Add(1)
 	go func() {
+		// 改行毎にscan
 		for s.Scan() {
-			if s.Text() == now_question {
-				score++
-				fmt.Printf("**********************************\n")
-				fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", remainTime, score)
-				fmt.Printf("**********************************\n")
-				now_question = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))-1]
-				fmt.Println(now_question)
-			} else {
-				fmt.Printf("incollect...\nTime Remain : %d\n\n", remainTime)
-				fmt.Printf("%s\n", now_question)
+			select {
+			case <-timeover:
+				goto L
+			// ここをdefaultジャなくて、入力が来たことを通知するチャネルを作って
+			// それに変更できないか
+
+			default:
+				if s.Text() == now_question {
+					score++
+					// Todo: ここを1つで表現
+					fmt.Printf("**********************************\n")
+					fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", remainTime, score)
+					fmt.Printf("**********************************\n")
+					// ここまで
+					now_question = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))-1]
+					fmt.Println(now_question)
+				} else {
+					fmt.Printf("incollect...\nTime Remain : %d\n\n", remainTime)
+					fmt.Printf("%s\n", now_question)
+				}
 			}
-			<-timer.C
-			timer.Stop()
-			break
+			// Todo: ここをtimer.Cのswitchにできないか。
 		}
-		return
+	L:
+		wg.Done()
+		fmt.Println("task2 done")
 	}()
 
-	time.Sleep(time.Second * 15)
+	fmt.Println("wating....")
+	wg.Wait()
 	fmt.Printf("\n\n")
 	fmt.Printf("======================\n")
 	fmt.Printf("time over!!\n your score : %d\n", score)
