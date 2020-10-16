@@ -150,6 +150,13 @@ func start() error {
 	if err != nil {
 		log.Fatal("err: %w", err)
 	}
+
+	if highScoreData == nil {
+		highScoreData = &db.LocalRanking{
+			Score: score,
+		}
+	}
+
 	fmt.Println("high score:", highScoreData.Score)
 	if score > highScoreData.Score {
 		err = askToSend(score)
