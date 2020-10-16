@@ -10,15 +10,6 @@ import (
 	"testing"
 )
 
-// `sushita start` を実行した時のステータスコードのテスト
-func TestStartSushita(t *testing.T) {
-	status := status()
-	fmt.Println(status, "status!!")
-	if status != 0 {
-		t.Errorf("expected 0, get %d", status)
-	}
-}
-
 // `sushita start` を実行した時の標準出力のテスト
 func TestPrintStart(t *testing.T) {
 	r, w, err := os.Pipe()
