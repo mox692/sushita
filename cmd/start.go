@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -56,56 +55,7 @@ func start() error {
 	}
 
 	game := newGame()
-	fmt.Println(game.nowQuestion)
-	s := bufio.NewScanner(os.Stdin)
-
-	wg := sync.WaitGroup{}
-	timeover := make(chan struct{})
-	inputAnswer := make(chan string)
-
-	wg.Add(1)
-	go func() {
-		for range time.Tick(1 * time.Second) {
-			game.gameTime--
-			if game.gameTime == 0 {
-				timeover <- struct{}{}
-				break
-			}
-		}
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		for {
-			select {
-			case <-timeover:
-				goto L
-			case text := <-inputAnswer:
-				if text == game.nowQuestion {
-					game.score++
-					fmt.Printf("**********************************\n")
-					fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", game.gameTime, game.score)
-					fmt.Printf("**********************************\n")
-					game.nowQuestion = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))]
-					fmt.Println(game.nowQuestion)
-				} else {
-					fmt.Printf("incollect...\nTime Remain : %d\n\n", game.gameTime)
-					fmt.Printf("%s\n", game.nowQuestion)
-				}
-			}
-		}
-	L:
-		wg.Done()
-	}()
-
-	go func() {
-		for s.Scan() {
-			inputAnswer <- s.Text()
-		}
-	}()
-
-	wg.Wait()
+	game.runGame()
 
 	highScoreData, err := getHighScore()
 	if err != nil {
@@ -136,11 +86,6 @@ func start() error {
 		return xerrors.Errorf("askToSend err : %w", err)
 	}
 
-	if s.Err() != nil {
-		// non-EOF error.
-		log.Fatal(s.Err())
-		return s.Err()
-	}
 	return nil
 }
 
@@ -149,13 +94,66 @@ func hasSQLFile() error {
 	if err != nil {
 		return fmt.Errorf(": %w", err)
 	}
-
 	dbPath := user.HomeDir + "/db.sql"
 	if f, err := os.Stat(dbPath); os.IsNotExist(err) || f.IsDir() {
 		fmt.Printf("`db.sql` is not found in %s.\n Run `sushita init`.", dbPath)
 		return nil
 	}
 	return nil
+}
+
+func (g *Game) runGame() {
+	fmt.Println(g.nowQuestion)
+	s := bufio.NewScanner(os.Stdin)
+
+	wg := sync.WaitGroup{}
+	timeover := make(chan struct{})
+	inputAnswer := make(chan string)
+
+	wg.Add(1)
+	go func() {
+		for range time.Tick(1 * time.Second) {
+			g.gameTime--
+			if g.gameTime == 0 {
+				timeover <- struct{}{}
+				break
+			}
+		}
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		for {
+			select {
+			case <-timeover:
+				goto L
+			case text := <-inputAnswer:
+				if text == g.nowQuestion {
+					g.score++
+					fmt.Printf("**********************************\n")
+					fmt.Printf("collect!!\nTime Remain : %d\nScore : %d\n", g.gameTime, g.score)
+					fmt.Printf("**********************************\n")
+					g.nowQuestion = constant.DefaultWords[rand.Intn(len(constant.DefaultWords))]
+					fmt.Println(g.nowQuestion)
+				} else {
+					fmt.Printf("incollect...\nTime Remain : %d\n\n", g.gameTime)
+					fmt.Printf("%s\n", g.nowQuestion)
+				}
+			}
+		}
+	L:
+		wg.Done()
+	}()
+
+	go func() {
+		for s.Scan() {
+			inputAnswer <- s.Text()
+		}
+	}()
+
+	wg.Wait()
+
 }
 
 func insertGameScore(score int) error {
@@ -184,21 +182,18 @@ func getHighScore() (*db.LocalRanking, error) {
 }
 
 func askToSend(score int) error {
-
 	fmt.Printf("\n\n🎉🎉🎉= HIGH SCORE !!! =🎉🎉🎉\n\n")
 	fmt.Println("Do you want to send your highscore to the server? (Y/N)")
 
 	var inputAnswer string
 	_, err := fmt.Scanf("%s", &inputAnswer)
 	if err != nil {
-		log.Fatal("err: %w", err)
-		return err
+		return xerrors.Errorf("Scanf error : %w", err)
 	}
-
 	switch inputAnswer {
 	case "Y", "y":
 		err := sendRankingData(score)
-		return err
+		return xerrors.Errorf("sendRankingData error: %w", err)
 	default:
 		fmt.Println("Not sending.")
 		return nil
@@ -208,11 +203,11 @@ func askToSend(score int) error {
 func sendRankingData(score int) error {
 	user, err := db.SelectUser()
 	if err != nil {
-		fmt.Errorf("err: %w", err)
+		return xerrors.Errorf("selectUser error: %w", err)
 	}
+
 	client := new(http.Client)
 	url := "https://sushita.uc.r.appspot.com/ranking/set"
-
 	sendData := &sendRankingRequest{
 		Name:  user.UserName,
 		Score: score,
@@ -220,7 +215,7 @@ func sendRankingData(score int) error {
 
 	jsonData, err := json.Marshal(sendData)
 	if err != nil {
-		return fmt.Errorf(": %w", err)
+		return xerrors.Errorf("json.Marshal err : %w", err)
 	}
 
 	req, err := http.NewRequest("Get", url, bytes.NewBuffer(jsonData))
@@ -231,11 +226,13 @@ func sendRankingData(score int) error {
 	if err != nil {
 		return xerrors.Errorf("client.Do err : %w", err)
 	}
-
 	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return xerrors.Errorf("ioutil.ReadAll : %w", err)
+	}
+
 	fmt.Println(string(b))
 	fmt.Println("raknking dataを送信しました")
-
 	return nil
 }
 
