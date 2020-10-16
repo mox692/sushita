@@ -153,8 +153,9 @@ func start() error {
 
 	if highScoreData == nil {
 		highScoreData = &db.LocalRanking{
-			Score: score,
+			Score: 0,
 		}
+
 	}
 
 	fmt.Println("high score:", highScoreData.Score)
