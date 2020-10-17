@@ -85,6 +85,7 @@ func TestStart_askToSend(t *testing.T) {
 
 }
 
+//
 func TestStart_sendRankingData(t *testing.T) {
 
 }

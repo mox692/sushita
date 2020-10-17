@@ -27,7 +27,26 @@ type Game struct {
 	nowQuestion string
 	gameTime    time.Duration
 	score       int
+	highScore   int
+	sendRanking bool
+	err         MyErr
 	endPoint    url.URL
+}
+
+type MyErr struct {
+	Category ErrCategory
+	Msg      string
+}
+
+type ErrCategory string
+
+var (
+	SQLFILE_NOT_FOUND ErrCategory
+	SOMETHING_WRONG   ErrCategory
+)
+
+func (e *MyErr) Error() string {
+	return e.Msg
 }
 
 func newGame() *Game {
@@ -54,42 +73,51 @@ var startCmd = &cobra.Command{
 }
 
 func start() error {
+	var err error
 
-	err := hasSQLFile()
+	err = hasSQLFile()
 	if err != nil {
-		return xerrors.Errorf("hasSqlFile err : %w", err)
+		v, ok := err.(*MyErr)
+		if ok && v.Category == SQLFILE_NOT_FOUND {
+			fmt.Printf("%s\n", v.Msg)
+			return nil
+		}
+		return xerrors.Errorf("hasSQLFile : %w", err)
 	}
 
 	game := newGame()
 	game.runGame()
 
-	highScoreData, err := getHighScore()
+	err = game.getHighScore()
 	if err != nil {
 		return xerrors.Errorf("getHighScore err : %w", err)
-	}
-	if highScoreData == nil {
-		highScoreData = &db.LocalRanking{
-			Score: 0,
-		}
 	}
 
 	fmt.Printf("\n\n")
 	fmt.Printf("======================\n")
-	fmt.Printf("time over!!\n your score : %d\n high score: %d\n", game.score, highScoreData.Score)
+	fmt.Printf("time over!!\n your score : %d\n high score: %d\n", game.score, game.highScore)
 	fmt.Printf("======================\n")
 
-	// localにscoreを保存
-	err = insertGameScore(game.score)
+	// err = game.insertGameScore()
+
 	if err != nil {
 		return xerrors.Errorf("insertGameScore err : %w", err)
 	}
 
-	if game.score > highScoreData.Score {
-		err = askToSend(game.score)
+	if game.score > game.highScore {
+		err = game.askToSend()
 	}
 
 	if err != nil {
 		return xerrors.Errorf("askToSend err : %w", err)
+	}
+
+	if game.sendRanking {
+		err = game.sendRankingData()
+	}
+
+	if err != nil {
+		return xerrors.Errorf("sendRankingData err : %w", err)
 	}
 
 	return nil
@@ -102,8 +130,10 @@ func hasSQLFile() error {
 	}
 	dbPath := user.HomeDir + "/db.sql"
 	if f, err := os.Stat(dbPath); os.IsNotExist(err) || f.IsDir() {
-		fmt.Printf("`db.sql` is not found in %s.\n Run `sushita init`.", dbPath)
-		return nil
+		return &MyErr{
+			Category: SQLFILE_NOT_FOUND,
+			Msg:      "`db.sql` is not found in " + dbPath + ".\n Run `sushita init`.",
+		}
 	}
 	return nil
 }
@@ -162,32 +192,41 @@ func (g *Game) runGame() {
 
 }
 
-func insertGameScore(score int) error {
+func (g *Game) insertGameScore() error {
 	stmt, err := db.DbConnection.Prepare("INSERT INTO local_ranking (score, created_at) VALUES (?, ?);")
 	if err != nil {
 		return xerrors.Errorf("db.Conn.Prepare err : %w", err)
 	}
-	_, err = stmt.Exec(score, timeToString(time.Now()))
+	_, err = stmt.Exec(g.score, timeToString(time.Now()))
 	if err != nil {
 		return xerrors.Errorf("stmt.Exec err : %w", err)
 	}
 	return nil
 }
 
-func getHighScore() (*db.LocalRanking, error) {
+func (g *Game) getHighScore() error {
 	localRanking := db.LocalRanking{}
 	row := db.DbConnection.QueryRow("select * from local_ranking order by score desc limit 1;")
 	err := row.Scan(&localRanking.Score, &localRanking.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil
 		}
-		return nil, xerrors.Errorf("row.Scan error: %w", err)
+		return xerrors.Errorf("row.Scan error: %w", err)
 	}
-	return &localRanking, nil
+	g.setHighScore(&localRanking)
+	return nil
 }
 
-func askToSend(score int) error {
+func (g *Game) setHighScore(localRanking *db.LocalRanking) {
+	if localRanking != nil {
+		g.highScore = localRanking.Score
+	} else {
+		g.highScore = 0
+	}
+}
+
+func (g *Game) askToSend() error {
 	fmt.Printf("\n\n🎉🎉🎉= HIGH SCORE !!! =🎉🎉🎉\n\n")
 	fmt.Println("Do you want to send your highscore to the server? (Y/N)")
 
@@ -198,15 +237,15 @@ func askToSend(score int) error {
 	}
 	switch inputAnswer {
 	case "Y", "y":
-		err := sendRankingData(score)
-		return xerrors.Errorf("sendRankingData error: %w", err)
+		g.sendRanking = true
+		return nil
 	default:
 		fmt.Println("Not sending.")
 		return nil
 	}
 }
 
-func sendRankingData(score int) error {
+func (g *Game) sendRankingData() error {
 	user, err := db.SelectUser()
 	if err != nil {
 		return xerrors.Errorf("selectUser error: %w", err)
@@ -216,7 +255,7 @@ func sendRankingData(score int) error {
 	url := "https://sushita.uc.r.appspot.com/ranking/set"
 	sendData := &sendRankingRequest{
 		Name:  user.UserName,
-		Score: score,
+		Score: g.score,
 	}
 
 	jsonData, err := json.Marshal(sendData)
