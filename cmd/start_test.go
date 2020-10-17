@@ -64,6 +64,31 @@ func TestCollectAnswear(t *testing.T) {
 	}
 }
 
+// 前処理と後処理で、
+// 1. db.sqlがある時
+// 2. ない時のテストをそれぞれ行う。
+func TestStart_hasSQLFile(t *testing.T) {
+
+}
+
+// gameインスタンスをtableで用意して、tabledrivenテストを行う。
+func TestStart_runGame(t *testing.T) {
+}
+
+func TestStart_insertGameScore(t *testing.T) {
+
+}
+
+// 標準入力のパターンをtableで用意してテスト(標準n入力をどのようにテストするか)
+// Todo: sendRankingDataまで呼ばず、ここまで呼ばれたら成功！という仕組みにしたい。。
+func TestStart_askToSend(t *testing.T) {
+
+}
+
+func TestStart_sendRankingData(t *testing.T) {
+
+}
+
 func getNthLine(text io.Reader, n int) (string, error) {
 	line := ""
 	scanner := bufio.NewScanner(text)

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"sync"
@@ -26,6 +27,7 @@ type Game struct {
 	nowQuestion string
 	gameTime    time.Duration
 	score       int
+	endPoint    url.URL
 }
 
 func newGame() *Game {
@@ -34,6 +36,10 @@ func newGame() *Game {
 		nowQuestion: constant.DefaultWords[rand.Intn(len(constant.DefaultWords))],
 		gameTime:    constant.InGameTime,
 		score:       0,
+		endPoint: url.URL{
+			Host: "sushita.uc.r.appspot.com",
+			Path: "/ranking/set",
+		},
 	}
 }
 
