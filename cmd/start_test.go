@@ -10,15 +10,6 @@ import (
 	"testing"
 )
 
-// `sushita start` を実行した時のステータスコードのテスト
-func TestStartSushita(t *testing.T) {
-	status := status()
-	fmt.Println(status, "status!!")
-	if status != 0 {
-		t.Errorf("expected 0, get %d", status)
-	}
-}
-
 // `sushita start` を実行した時の標準出力のテスト
 func TestPrintStart(t *testing.T) {
 	r, w, err := os.Pipe()
@@ -71,6 +62,32 @@ func TestCollectAnswear(t *testing.T) {
 	if !strings.Contains(strings.TrimRight(buf.String(), "\r\n"), "enter eny command") {
 		t.Errorf("status() = %s, want 'enter eny command'", buf.String())
 	}
+}
+
+// 前処理と後処理で、
+// 1. db.sqlがある時
+// 2. ない時のテストをそれぞれ行う。
+func TestStart_hasSQLFile(t *testing.T) {
+
+}
+
+// gameインスタンスをtableで用意して、tabledrivenテストを行う。
+func TestStart_runGame(t *testing.T) {
+}
+
+func TestStart_insertGameScore(t *testing.T) {
+
+}
+
+// 標準入力のパターンをtableで用意してテスト(標準n入力をどのようにテストするか)
+// Todo: sendRankingDataまで呼ばず、ここまで呼ばれたら成功！という仕組みにしたい。。
+func TestStart_askToSend(t *testing.T) {
+
+}
+
+//
+func TestStart_sendRankingData(t *testing.T) {
+
 }
 
 func getNthLine(text io.Reader, n int) (string, error) {

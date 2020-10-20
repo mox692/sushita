@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"database/sql"
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"text/template"
 
+	"github.com/mox692/sushita/constant"
 	"github.com/mox692/sushita/db"
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
@@ -23,20 +26,30 @@ var rankingCmd = &cobra.Command{
 }
 
 func getRanking() error {
-
 	client := new(http.Client)
-	req, err := http.NewRequest("GET", "http://localhost:8080/ranking", nil)
+	req, err := http.NewRequest("GET", "https://sushita.uc.r.appspot.com/ranking", nil)
 	usr, _ := getUser()
 	req.Header.Add("user-token", usr.UserId)
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 
 	byteArray, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(byteArray)) // htmlをstringで取得
+
+	var userScores []userScore
+	err = json.Unmarshal(byteArray, &userScores)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	t, _ := template.New("temp").Parse(constant.RankingLog)
+
+	for _, v := range userScores {
+		t.Execute(os.Stdout, v)
+	}
 
 	return nil
 }
@@ -44,6 +57,12 @@ func getRanking() error {
 type usr struct {
 	UserId string
 	Name   string
+}
+
+type userScore struct {
+	Name    string `json:"name"`
+	Score   int    `json:"score"`
+	Ranking int    `json:ranking"`
 }
 
 func getUser() (*usr, error) {

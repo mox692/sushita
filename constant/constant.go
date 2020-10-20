@@ -1,6 +1,8 @@
 package constant
 
+import "time"
+
 const (
 	// gameplaying time(sec)
-	ingameTime = 15
+	InGameTime = time.Duration(15)
 )
