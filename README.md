@@ -14,19 +14,19 @@
 Get binary from [release page]().
 If you have Go environment, you can build manualy by cloning this repository.  
 
-⚠️
-・You have to install SQLite to your machine to play this tool.
+⚠️  
+You have to install SQLite to your machine to play this tool.  
+
 # commands
+### `sushita init`
+At first, you have to run this command.  
+This command will create sqlfile(db.sql) in your home directory.  
 
+### `sushita start`
+Then, you can start game by running `sushita start`
+  
+# Contact 
+If you notice something wrong, please send a issue :)
 
-# Run in local
-```
-**Get repository**  
-$ git clone https://github.com/mox692/sushita  
-
-**Quick start**  
-$ go run .   
-Let's run sushita start
-```
-# Command
-
+# License
+MIT
