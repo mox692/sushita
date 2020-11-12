@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/golang/mock v1.4.4 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/mattn/go-sqlite3 v1.14.3
 	github.com/mitchellh/go-homedir v1.1.0
