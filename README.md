@@ -11,7 +11,7 @@
 ・Inspired by  ['sushida'](http://typingx0.net/sushida/), a typing game.  
 
 ## install
-Get binary from [release page]().
+Get binary from [release page](https://github.com/mox692/sushita/releases/).  
 If you have Go environment, you can build manualy by cloning this repository.  
 
 ⚠️  
