@@ -10,14 +10,14 @@ func Transaction(txFunc func(*sql.Tx) error, dbConn *sql.DB) error {
 
 	tx, err := dbConn.Begin()
 	if err != nil {
-		log.Println(err, "トランザクションの開始に失敗しました")
+		log.Println(err, "fail dbConn.Begin")
 		return err
 	}
 	defer func() {
 		if p := recover(); p != nil {
 			rollbackErr := tx.Rollback()
 			if rollbackErr != nil {
-				log.Println(rollbackErr, "defer内のロールバックに失敗しました。")
+				log.Println(rollbackErr, "fail tx.Rollback")
 			} else {
 				log.Println("ロールバックしました。")
 			}
@@ -26,7 +26,7 @@ func Transaction(txFunc func(*sql.Tx) error, dbConn *sql.DB) error {
 			log.Println(err)
 			rollbackErr := tx.Rollback()
 			if rollbackErr != nil {
-				log.Println(rollbackErr, "defer内のロールバックに失敗しました。")
+				log.Println(rollbackErr, "fail tx.Rollback")
 			} else {
 				log.Println("ロールバックしました。")
 			}
